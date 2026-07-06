@@ -11,6 +11,8 @@ on:
         options:
           - ERC20Token
           - MyNFT
+          - RwaExample
+          - SimpleStorage
       network:
         description: 'Target Network'
         required: true
@@ -94,6 +96,12 @@ jobs:
             echo "TOKEN_NAME=${NAME:-Robinhood Token}" >> $GITHUB_ENV
             echo "TOKEN_SYMBOL=${SYMBOL:-RHT}" >> $GITHUB_ENV
             echo "TOKEN_INITIAL_SUPPLY=${{ github.event.inputs.initial_supply }}" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.contract }}" = "RwaExample" ]; then
+            NAME="${{ github.event.inputs.token_name }}"
+            SYMBOL="${{ github.event.inputs.token_symbol }}"
+            echo "RWA_NAME=${NAME:-Robinhood Simple RWA}" >> $GITHUB_ENV
+            echo "RWA_SYMBOL=${SYMBOL:-RSRWA}" >> $GITHUB_ENV
+            echo "RWA_INITIAL_PRICE=10000" >> $GITHUB_ENV
           else
             NAME="${{ github.event.inputs.token_name }}"
             SYMBOL="${{ github.event.inputs.token_symbol }}"
@@ -106,6 +114,10 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.contract }}" = "ERC20Token" ]; then
             SCRIPT="script/DeployToken.s.sol:DeployScript"
+          elif [ "${{ github.event.inputs.contract }}" = "RwaExample" ]; then
+            SCRIPT="script/DeployRwa.s.sol:DeployScript"
+          elif [ "${{ github.event.inputs.contract }}" = "SimpleStorage" ]; then
+            SCRIPT="script/DeploySimpleStorage.s.sol:DeployScript"
           else
             SCRIPT="script/DeployNFT.s.sol:DeployNFTScript"
           fi

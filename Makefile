@@ -103,3 +103,45 @@ set-base-uri: ## Set NFT base URI (usage: make set-base-uri ADDRESS=0x... URI=ip
 		--rpc-url $(ACTIVE_RPC) \
 		--account $(ACCOUNT) \
 		--legacy
+
+# --- Simple RWA Interactions ---
+
+deploy-rwa: ## Deploy SimpleRWA (usage: make deploy-rwa [NETWORK=testnet] [ACCOUNT=mywallet])
+	@$(MAKE) deploy SCRIPT=DeployRwa CONTRACT=DeployScript NETWORK=$(NETWORK) ACCOUNT=$(ACCOUNT)
+
+mint-rwa: ## Mint SimpleRWA tokens (usage: make mint-rwa ADDRESS=0x... TO=0x... AMOUNT=1000000000000000000 [NETWORK=testnet] [ACCOUNT=mywallet])
+	@echo "Minting $(AMOUNT) tokens to $(TO) on $(NETWORK) using account $(ACCOUNT)..."
+	cast send $(ADDRESS) "mint(address,uint256)" $(TO) $(AMOUNT) \
+		--rpc-url $(ACTIVE_RPC) \
+		--account $(ACCOUNT) \
+		--legacy
+
+set-eligibility: ## Set eligibility of an address (usage: make set-eligibility ADDRESS=0x... USER=0x... ELIGIBLE=true [NETWORK=testnet] [ACCOUNT=mywallet])
+	@echo "Setting eligibility of $(USER) to $(ELIGIBLE) on $(NETWORK) using account $(ACCOUNT)..."
+	cast send $(ADDRESS) "setEligibility(address,bool)" $(USER) $(ELIGIBLE) \
+		--rpc-url $(ACTIVE_RPC) \
+		--account $(ACCOUNT) \
+		--legacy
+
+set-price: ## Set reference price per share in cents (usage: make set-price ADDRESS=0x... PRICE=15000 [NETWORK=testnet] [ACCOUNT=mywallet])
+	@echo "Setting price per share of $(ADDRESS) to $(PRICE) cents on $(NETWORK) using account $(ACCOUNT)..."
+	cast send $(ADDRESS) "setPricePerShareCents(uint256)" $(PRICE) \
+		--rpc-url $(ACTIVE_RPC) \
+		--account $(ACCOUNT) \
+		--legacy
+
+# --- Simple Storage Interactions ---
+
+deploy-storage: ## Deploy SimpleStorage (usage: make deploy-storage [NETWORK=testnet] [ACCOUNT=mywallet])
+	@$(MAKE) deploy SCRIPT=DeploySimpleStorage CONTRACT=DeployScript NETWORK=$(NETWORK) ACCOUNT=$(ACCOUNT)
+
+set-storage: ## Set a value in SimpleStorage (usage: make set-storage ADDRESS=0x... VALUE=42 [NETWORK=testnet] [ACCOUNT=mywallet])
+	@echo "Setting value in SimpleStorage at $(ADDRESS) to $(VALUE) on $(NETWORK) using account $(ACCOUNT)..."
+	cast send $(ADDRESS) "set(uint256)" $(VALUE) \
+		--rpc-url $(ACTIVE_RPC) \
+		--account $(ACCOUNT) \
+		--legacy
+
+get-storage: ## Get the stored value from SimpleStorage (usage: make get-storage ADDRESS=0x... [NETWORK=testnet])
+	@cast call $(ADDRESS) "get()(uint256)" \
+		--rpc-url $(ACTIVE_RPC)
