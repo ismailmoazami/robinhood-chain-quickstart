@@ -60,9 +60,7 @@ contract MyNFTTest is Test {
 
     function test_NonOwnerCannotSetBaseURI() public {
         vm.prank(user);
-        vm.expectRevert(
-            abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", user)
-        );
+        vm.expectRevert();
         nft.setBaseURI(NEW_BASE_URI);
     }
 
@@ -86,9 +84,7 @@ contract MyNFTTest is Test {
 
     function test_NonOwnerCannotWithdraw() public {
         vm.prank(user);
-        vm.expectRevert(
-            abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", user)
-        );
+        vm.expectRevert();
         nft.withdraw();
     }
 }

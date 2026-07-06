@@ -11,10 +11,7 @@ contract DeployScript is Script {
         // Retrieve deployment details from env, falling back to defaults if not set
         string memory name = vm.envOr("TOKEN_NAME", string("Robinhood Token"));
         string memory symbol = vm.envOr("TOKEN_SYMBOL", string("RHT"));
-        uint256 initialSupply = vm.envOr(
-            "TOKEN_INITIAL_SUPPLY",
-            uint256(1_000_000)
-        );
+        uint256 initialSupply = vm.envOr("TOKEN_INITIAL_SUPPLY", uint256(1_000_000));
         address deployer = msg.sender;
 
         console.log("Deploying contract with details:");
@@ -23,12 +20,7 @@ contract DeployScript is Script {
         console.log("- Initial Supply:", initialSupply);
         console.log("- Owner/Deployer:", deployer);
 
-        ERC20Token token = new ERC20Token(
-            name,
-            symbol,
-            initialSupply,
-            deployer
-        );
+        ERC20Token token = new ERC20Token(name, symbol, initialSupply, deployer);
 
         console.log("ERC20Token successfully deployed to:", address(token));
 
