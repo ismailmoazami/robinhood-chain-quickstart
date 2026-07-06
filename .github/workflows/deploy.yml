@@ -1,0 +1,123 @@
+name: CD - Deploy Contracts
+
+on:
+  workflow_dispatch:
+    inputs:
+      contract:
+        description: 'Contract to deploy'
+        required: true
+        default: 'ERC20Token'
+        type: choice
+        options:
+          - ERC20Token
+          - MyNFT
+      network:
+        description: 'Target Network'
+        required: true
+        default: 'testnet'
+        type: choice
+        options:
+          - testnet
+          - mainnet
+      token_name:
+        description: 'Name of the Token/NFT (Leave blank for default)'
+        required: false
+        default: ''
+      token_symbol:
+        description: 'Symbol of the Token/NFT (Leave blank for default)'
+        required: false
+        default: ''
+      initial_supply:
+        description: 'Initial Supply (ERC20 only)'
+        required: false
+        default: '1000000'
+      base_uri:
+        description: 'Base URI (NFT only)'
+        required: false
+        default: 'ipfs://QmDefaultNFTBaseURI/'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event.inputs.contract }} to ${{ github.event.inputs.network }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Secrets
+        run: |
+          if [ -z "${{ secrets.DEPLOYER_PRIVATE_KEY }}" ]; then
+            echo "::error::DEPLOYER_PRIVATE_KEY secret is not set. Please add it to your repository secrets."
+            exit 1
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Set Environment Variables
+        run: |
+          # Default configurations for Robinhood Chain
+          TESTNET_RPC="https://rpc.testnet.chain.robinhood.com"
+          MAINNET_RPC="https://rpc.mainnet.chain.robinhood.com"
+          TESTNET_CHAIN="46630"
+          MAINNET_CHAIN="4663"
+          TESTNET_VERIFIER="https://explorer.testnet.chain.robinhood.com/api/"
+          MAINNET_VERIFIER="https://robinhoodchain.blockscout.com/api/"
+
+          # Determine network variables
+          if [ "${{ github.event.inputs.network }}" = "mainnet" ]; then
+            # Use custom RPC secret if set, otherwise fallback to default public RPC
+            RPC_URL="${{ secrets.MAINNET_RPC_URL }}"
+            RPC_URL="${RPC_URL:-$MAINNET_RPC}"
+            CHAIN_ID="$MAINNET_CHAIN"
+            VERIFIER_URL="$MAINNET_VERIFIER"
+          else
+            RPC_URL="${{ secrets.TESTNET_RPC_URL }}"
+            RPC_URL="${RPC_URL:-$TESTNET_RPC}"
+            CHAIN_ID="$TESTNET_CHAIN"
+            VERIFIER_URL="$TESTNET_VERIFIER"
+          fi
+
+          echo "RPC_URL=$RPC_URL" >> $GITHUB_ENV
+          echo "CHAIN_ID=$CHAIN_ID" >> $GITHUB_ENV
+          echo "VERIFIER_URL=$VERIFIER_URL" >> $GITHUB_ENV
+
+          # Configure token/NFT inputs
+          if [ "${{ github.event.inputs.contract }}" = "ERC20Token" ]; then
+            NAME="${{ github.event.inputs.token_name }}"
+            SYMBOL="${{ github.event.inputs.token_symbol }}"
+            echo "TOKEN_NAME=${NAME:-Robinhood Token}" >> $GITHUB_ENV
+            echo "TOKEN_SYMBOL=${SYMBOL:-RHT}" >> $GITHUB_ENV
+            echo "TOKEN_INITIAL_SUPPLY=${{ github.event.inputs.initial_supply }}" >> $GITHUB_ENV
+          else
+            NAME="${{ github.event.inputs.token_name }}"
+            SYMBOL="${{ github.event.inputs.token_symbol }}"
+            echo "NFT_NAME=${NAME:-Robinhood NFT Collection}" >> $GITHUB_ENV
+            echo "NFT_SYMBOL=${SYMBOL:-RHNFT}" >> $GITHUB_ENV
+            echo "NFT_BASE_URI=${{ github.event.inputs.base_uri }}" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy Contract
+        run: |
+          if [ "${{ github.event.inputs.contract }}" = "ERC20Token" ]; then
+            SCRIPT="script/DeployToken.s.sol:DeployScript"
+          else
+            SCRIPT="script/DeployNFT.s.sol:DeployNFTScript"
+          fi
+
+
+          echo "Deploying using script $SCRIPT on chain $CHAIN_ID"
+          
+          forge script "$SCRIPT" \
+            --rpc-url "$RPC_URL" \
+            --private-key "${{ secrets.DEPLOYER_PRIVATE_KEY }}" \
+            --broadcast \
+            --verify \
+            --verifier blockscout \
+            --verifier-url "$VERIFIER_URL" \
+            --legacy
