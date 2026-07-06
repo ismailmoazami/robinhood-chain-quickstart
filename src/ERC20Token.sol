@@ -2,9 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {
-    ERC20Burnable
-} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -20,12 +18,10 @@ contract ERC20Token is ERC20, ERC20Burnable, Ownable {
      * @param initialSupply The initial amount of tokens to mint (without decimals scaling).
      * @param initialOwner The address of the initial owner who will receive the supply and admin rights.
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint256 initialSupply,
-        address initialOwner
-    ) ERC20(name, symbol) Ownable(initialOwner) {
+    constructor(string memory name, string memory symbol, uint256 initialSupply, address initialOwner)
+        ERC20(name, symbol)
+        Ownable(initialOwner)
+    {
         // Mint the initial supply to the owner (scaled by 10^decimals)
         _mint(initialOwner, initialSupply * 10 ** decimals());
     }

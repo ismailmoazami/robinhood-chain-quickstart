@@ -12,18 +12,16 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract MyNFT is ERC721, Ownable {
     uint256 private _nextTokenId;
     string private _baseTokenURI;
-    
+
     uint256 public constant MINT_PRICE = 0.001 ether;
 
     event NFTMinted(address indexed recipient, uint256 indexed tokenId);
     event BaseURIChanged(string newBaseURI);
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        address initialOwner,
-        string memory initialBaseURI
-    ) ERC721(name, symbol) Ownable(initialOwner) {
+    constructor(string memory name, string memory symbol, address initialOwner, string memory initialBaseURI)
+        ERC721(name, symbol)
+        Ownable(initialOwner)
+    {
         _baseTokenURI = initialBaseURI;
     }
 
@@ -34,7 +32,7 @@ contract MyNFT is ERC721, Ownable {
      */
     function mintNFT(address recipient) public payable returns (uint256) {
         require(msg.value >= MINT_PRICE, "Insufficient payment: must be at least 0.001 ether");
-        
+
         uint256 tokenId = _nextTokenId++;
         _safeMint(recipient, tokenId);
 
@@ -65,8 +63,8 @@ contract MyNFT is ERC721, Ownable {
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No funds to withdraw");
-        
-        (bool success, ) = owner().call{value: balance}("");
+
+        (bool success,) = owner().call{value: balance}("");
         require(success, "Withdrawal failed");
     }
 }
